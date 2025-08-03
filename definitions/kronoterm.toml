@@ -1,0 +1,288 @@
+# KRONOTERM MA_numbering is one-based in documentation and we
+# use it here too although internally we substract 1 for all
+# register adresses!
+
+# https://developers.home-assistant.io/docs/core/entity/sensor
+
+[[sensor]]
+register = 2023
+name = "Desired DHW temperature"
+device_class = "temperature"
+state_class = "measurement"
+unit_of_measurement = "°C"
+scale = 0.1
+
+[[sensor]]
+register = 2024
+name = "Current desired DHW temperature"
+device_class = "temperature"
+state_class = "measurement"
+unit_of_measurement = "°C"
+scale = 0.1
+
+[[sensor]]
+register = 2047
+name = "Loop 1 temperature offset in ECO mode"
+device_class = "temperature"
+state_class = "measurement"
+unit_of_measurement = "°C"
+scale = 0.1
+
+[[sensor]]
+register = 2090
+name = "Operating hours compressor heating"
+device_class = "duration"
+state_class = "total_increasing"
+unit_of_measurement = "h"
+scale = 1
+
+[[sensor]]
+register = 2091
+name = "Operating hours compressor heating DHW"
+device_class = "duration"
+state_class = "total_increasing"
+unit_of_measurement = "h"
+scale = 1
+
+[[sensor]]
+register = 2095
+name = "Operating hours additional source 1"
+device_class = "duration"
+state_class = "total_increasing"
+unit_of_measurement = "h"
+scale = 1
+
+[[sensor]]
+register = 2101
+name = "HP inlet temperature"
+device_class = "temperature"
+state_class = "measurement"
+unit_of_measurement = "°C"
+scale = 0.1
+
+[[sensor]]
+register = 2102
+name = "DHW temperature"
+device_class = "temperature"
+state_class = "measurement"
+unit_of_measurement = "°C"
+scale = 0.1
+
+[[sensor]]
+register = 2103
+name = "Outside temperature"
+device_class = "temperature"
+state_class = "measurement"
+unit_of_measurement = "°C"
+scale = 0.1
+
+[[sensor]]
+register = 2104
+name = "HP outlet temperature"
+device_class = "temperature"
+state_class = "measurement"
+unit_of_measurement = "°C"
+scale = 0.1
+
+[[sensor]]
+register = 2105
+name = "Evaporating temperature"
+device_class = "temperature"
+state_class = "measurement"
+unit_of_measurement = "°C"
+scale = 0.1
+
+[[sensor]]
+register = 2106
+name = "Compressor temperature"
+device_class = "temperature"
+state_class = "measurement"
+unit_of_measurement = "°C"
+scale = 0.1
+
+[[sensor_disabled]]
+register = 2107
+name = "Alternative source temperature"
+device_class = "temperature"
+state_class = "measurement"
+unit_of_measurement = "°C"
+scale = 0.1
+
+[[sensor_disabled]]
+register = 2109
+name = "Pool temperature"
+device_class = "temperature"
+state_class = "measurement"
+unit_of_measurement = "°C"
+scale = 0.1
+
+[[sensor]]
+register = 2129
+name = "Current power consumption"
+device_class = "power"
+state_class = "measurement"
+unit_of_measurement = "W"
+scale = 1.0
+
+[[sensor]]
+register = 2130
+name = "Loop 1 temperature"
+device_class = "temperature"
+state_class = "measurement"
+unit_of_measurement = "°C"
+scale = 0.1
+
+[[sensor]]
+register = 2110
+name = "Loop 2 temperature"
+device_class = "temperature"
+state_class = "measurement"
+unit_of_measurement = "°C"
+scale = 0.1
+
+[[sensor_disabled]]
+register = 2150
+name = "Heat pump controller version"
+device_class = ""
+state_class = "measurement"
+unit_of_measurement = ""
+scale = 0.001
+
+[[sensor_disabled]]
+register = 2160
+name = "Loop 1 thermostat temperature"
+device_class = "temperature"
+state_class = "measurement"
+unit_of_measurement = "°C"
+scale = 0.1
+
+[[sensor]]
+register = 2161
+name = "Loop 2 thermostat temperature"
+device_class = "temperature"
+state_class = "measurement"
+unit_of_measurement = "°C"
+scale = 0.1
+
+[[sensor_disabled]]
+register = 2325
+name = "Setting of the pressure of the heating system"
+device_class = "pressure"
+state_class = "measurement"
+unit_of_measurement = "bar"
+scale = 0.1
+
+[[sensor]]
+register = 2326
+name = "Heating system pressure"
+device_class = "pressure"
+state_class = "measurement"
+unit_of_measurement = "bar"
+scale = 0.1
+
+[[sensor]]
+register = 2327
+name = "Current HP load"
+device_class = "battery" # instead of power_factor for nicer show
+state_class = "measurement"
+unit_of_measurement = "%"
+scale = 1
+
+[[sensor_disabled]]
+register = 2347
+name = "Setting pressure of the heating source"
+device_class = "pressure"
+state_class = "measurement"
+unit_of_measurement = "bar"
+scale = 0.1
+
+[[sensor]]
+register = 2348
+name = "Source pressure"
+device_class = "pressure"
+state_class = "measurement"
+unit_of_measurement = "bar"
+scale = 0.1
+
+[[sensor_disabled]]
+register = 2371
+name = "COP"
+device_class = "power_factor"
+state_class = "measurement"
+unit_of_measurement = ""
+scale = 0.01
+
+[[sensor]]
+register = 2372
+name = "SCOP"
+device_class = "power_factor"
+state_class = "measurement"
+unit_of_measurement = ""
+scale = 0.01
+
+[[enum_sensor]]
+register = 2001
+name = "Working function"
+[[enum_sensor.options]]
+keys = [0, 1, 2, 3, 4, 5, 7]
+values = ["heating", "DHW", "cooling", "pool heating", "thermal disinfection", "standby", "remote deactivation"]
+
+[[enum_sensor]]
+register = 2006
+name = "Error/warning status"
+[[enum_sensor.options]]
+keys = [0, 1, 2]
+values = ["no error", "opozorilo", "error", "notification"]
+
+[[enum_sensor]]
+register = 2007
+name = "Operation regime"
+[[enum_sensor.options]]
+keys = [0, 1, 2]
+values = ["cooling", "heating", "heating and cooling off"]
+
+[[enum_sensor]]
+register = 2044
+name = "Loop 1 operation status on schedule"
+[[enum_sensor.options]]
+keys = [0, 1, 2, 3]
+values = ["off", "normal", "ECO", "COM"]
+
+[[binary_sensor]]
+register = 2000
+name = "System operation"
+device_class = ""
+
+[[binary_sensor]]
+register = 2045
+name = "Loop 1 circulation pump status"
+device_class = "running"
+
+[[binary_sensor]]
+register = 2055
+name = "Loop 2 circulation pump status"
+device_class = "running"
+
+[[binary_sensor]]
+register = 2002
+name = "Activation of additional source"
+device_class = "power"
+bit = 0
+
+[[binary_sensor]]
+register = 2002
+name = "Aditional source 1 is active"
+device_class = "running"
+bit = 4
+
+[[binary_sensor]]
+register = 2028
+name = "DHW circulation pump"
+device_class = "running"
+bit = 0
+
+[[binary_sensor]]
+register = 2028
+name = "Circulation Pump for DHW tank"
+device_class = "running"
+bit = 1

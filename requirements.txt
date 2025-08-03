@@ -1,0 +1,8 @@
+# Core dependencies
+pymodbus>=3.9.0
+paho-mqtt>=2.1.0
+ha-services>=0.3.0
+python-dotenv>=1.0.0
+
+# Utilities
+rich>=13.0.0

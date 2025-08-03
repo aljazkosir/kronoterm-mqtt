@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  kronoterm-mqtt:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kronoterm-mqtt
+    restart: unless-stopped
+    volumes:
+      - ./definitions:/app/definitions
+    env_file:
+      - .env
+    networks:
+      - kronoterm-network
+
+networks:
+  kronoterm-network:
+    driver: bridge

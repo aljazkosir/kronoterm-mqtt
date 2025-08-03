@@ -1,0 +1,92 @@
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "kronoterm-mqtt"
+version = "1.0.0"
+description = "A Docker-based application that connects to Kronoterm heat pumps via Modbus TCP and publishes data to MQTT for Home Assistant integration"
+readme = "README.md"
+license = "GPL-3.0-or-later"
+authors = [
+    "Aljaž Košir <aljazkosir5@gmail.com>"
+]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Home Automation",
+]
+packages = [
+    { include = "kronoterm_mqtt" }
+]
+
+[tool.poetry.dependencies]
+python = ">=3.11"
+pymodbus = ">=3.9.0"
+paho-mqtt = ">=2.1.0"
+ha-services = ">=0.3.0"
+python-dotenv = ">=1.0.0"
+rich = ">=13.0.0"
+ruff = "^0.12.7"
+
+[tool.poetry.urls]
+"Homepage" = "https://github.com/aljazkosir/kronoterm-mqtt"
+"Bug Tracker" = "https://github.com/aljazkosir/kronoterm-mqtt/issues"
+
+[tool.ruff]
+# Same as Black
+line-length = 120
+# Target Python 3.11
+target-version = "py311"
+
+# Exclude a variety of commonly ignored directories
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+]
+
+[tool.ruff.lint]
+# Enable pycodestyle (E), Pyflakes (F), isort (I), and more
+select = ["E", "F", "I", "W", "N", "B", "C4", "T20", "RET", "SIM"]
+ignore = []
+
+# Allow autofix for all enabled rules (when `--fix`) is provided
+fixable = ["ALL"]
+unfixable = []
+
+# Allow unused variables when underscore-prefixed
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.lint.mccabe]
+# Unlike Flake8, default to a complexity level of 10
+max-complexity = 10
+
+[tool.ruff.lint.isort]
+known-third-party = ["pymodbus", "paho", "ha_services", "dotenv", "rich"]
+
+[tool.ruff.format]
+# Use double quotes for strings
+quote-style = "double"
+# Indent with 4 spaces
+indent-style = "space"
+line-ending = "auto"
