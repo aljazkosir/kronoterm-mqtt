@@ -104,7 +104,7 @@ class KronotermModbusClient:
             logger.error("Modbus client not connected")
             return False
 
-        response = self.client.write_register(address=address, value=value, slave=self.slave_id)
+        response = self.client.write_register(address=address, value=value, device_id=self.slave_id)
 
         if isinstance(response, (ExceptionResponse, ModbusIOException)):
             logger.error(f"Error writing register: {response}")

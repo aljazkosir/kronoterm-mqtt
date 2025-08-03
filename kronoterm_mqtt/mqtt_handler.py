@@ -13,7 +13,7 @@ from ha_services.mqtt4homeassistant.mqtt import get_connected_client
 from ha_services.mqtt4homeassistant.utilities.string_utils import slugify
 from paho.mqtt.client import Client
 
-from .constants import DEFAULT_DEVICE_MANUFACTURER, REVERSED_DOMESTIC_WATER_OPTIONS
+from .constants import DEFAULT_DEVICE_MANUFACTURER
 from .modbus import KronotermModbusClient, get_modbus_client
 from .settings import Settings
 
@@ -53,9 +53,8 @@ class KronotermMqttHandler:
         self.registers: Dict[int, int] = {}
 
         # Initialize switches and selects
-        self.dhw_circulation_switch: Optional[Switch] = None
-        self.additional_source_switch: Optional[Switch] = None
-        self.domestic_water_operation: Optional[Select] = None
+        self.switches: Dict[int, Switch] = {}
+        self.selects: Dict[int, Tuple[Select, Dict[str, List[Any]]]] = {}
 
     def __enter__(self):
         """
@@ -150,50 +149,70 @@ class KronotermMqttHandler:
             )
 
         # Create switches
-        self.dhw_circulation_switch = Switch(
-            device=self.main_device,
-            name="Circulation of sanitary water",
-            uid="dhw_circulation_switch",
-            callback=self.dhw_circulation_callback,
-        )
+        if "switch" in definitions:
+            switch_definitions = definitions["switch"]
+            for parameter in switch_definitions:
+                address = parameter["register"] - 1  # KRONOTERM MA_numbering is one-based in documentation!
 
-        self.additional_source_switch = Switch(
-            device=self.main_device,
-            name="Additional Source",
-            uid="additional_source_switch",
-            callback=self.additional_source_callback,
-        )
+                switch = Switch(
+                    device=self.main_device,
+                    name=parameter["name"],
+                    uid=slugify(parameter["name"], "_").lower(),
+                    callback=self.switch_callback,
+                )
+
+                self.switches[address] = switch
 
         # Create selects
-        self.domestic_water_operation = Select(
-            device=self.main_device,
-            name="Domestic water operation",
-            uid="domestic_water_operation",
-            default_option="ON",
-            options=("OFF", "ON", "SCHEDULED"),
-            callback=self.domestic_water_operation_callback,
-        )
+        if "select" in definitions:
+            select_definitions = definitions["select"]
+            for parameter in select_definitions:
+                address = parameter["register"] - 1  # KRONOTERM MA_numbering is one-based in documentation!
+
+                options = parameter["options"][0]  # Get first options object
+                select = Select(
+                    device=self.main_device,
+                    name=parameter["name"],
+                    uid=slugify(parameter["name"], "_").lower(),
+                    default_option=parameter["default_option"],
+                    options=tuple(options["values"]),
+                    callback=self.select_callback,
+                )
+
+                self.selects[address] = (select, options)
 
         # Compute address ranges for efficient Modbus reading
         addresses = sorted(
             list(self.sensors.keys())
             + list(self.binary_sensors.keys())
             + list(self.enum_sensors.keys())
-            + [2327, 2014, 2025]
+            + list(self.switches.keys())
+            + list(self.selects.keys())
         )
         self.address_ranges = list(self.ranges(addresses))
 
         if self.verbosity > 0:
             logger.info(f"Address ranges: {self.address_ranges}")
 
-    def dhw_circulation_callback(self, *, client: Client, component: Switch, old_state: str, new_state: str):
+    def switch_callback(self, *, client: Client, component: Switch, old_state: str, new_state: str):
         """
-        Callback for DHW circulation switch state change.
+        Generic callback for switch state changes.
         """
         logger.info(f"{component.name} state changed: {old_state!r} -> {new_state!r}")
 
+        # Find the address for this switch
+        address = None
+        for addr, switch in self.switches.items():
+            if switch == component:
+                address = addr
+                break
+
+        if address is None:
+            logger.error(f"Could not find address for switch {component.name}")
+            return
+
         value = 1 if new_state == "ON" else 0
-        success = self.modbus_client.write_register(address=2327, value=value)
+        success = self.modbus_client.write_register(address=address, value=value)
 
         if success:
             component.set_state(new_state)
@@ -201,31 +220,37 @@ class KronotermMqttHandler:
         else:
             logger.error(f"Failed to write register for {component.name}")
 
-    def additional_source_callback(self, *, client: Client, component: Switch, old_state: str, new_state: str):
+    def select_callback(self, *, client: Client, component: Select, old_state: str, new_state: str):
         """
-        Callback for additional source switch state change.
+        Generic callback for select state changes.
         """
         logger.info(f"{component.name} state changed: {old_state!r} -> {new_state!r}")
 
-        value = 1 if new_state == "ON" else 0
-        success = self.modbus_client.write_register(address=2014, value=value)
+        # Find the address and options for this select
+        address = None
+        options = None
+        for addr, (select, select_options) in self.selects.items():
+            if select == component:
+                address = addr
+                options = select_options
+                break
 
-        if success:
-            component.set_state(new_state)
-            component.publish_state(client)
-        else:
-            logger.error(f"Failed to write register for {component.name}")
+        if address is None or options is None:
+            logger.error(f"Could not find address or options for select {component.name}")
+            return
 
-    def domestic_water_operation_callback(self, *, client: Client, component: Select, old_state: str, new_state: str):
-        """
-        Callback for domestic water operation select state change.
-        """
-        from .constants import DOMESTIC_WATER_OPTIONS
+        # Convert display value to register value
+        value = None
+        for index, display_value in enumerate(options["values"]):
+            if display_value == new_state:
+                value = options["keys"][index]
+                break
 
-        logger.info(f"{component.name} state changed: {old_state!r} -> {new_state!r}")
+        if value is None:
+            logger.error(f"Could not find register value for display value {new_state}")
+            return
 
-        value = DOMESTIC_WATER_OPTIONS[new_state]
-        success = self.modbus_client.write_register(address=2025, value=value)
+        success = self.modbus_client.write_register(address=address, value=value)
 
         if success:
             component.set_state(new_state)
@@ -253,15 +278,6 @@ class KronotermMqttHandler:
         # Create and connect Modbus client
         self.modbus_client = get_modbus_client(self.heat_pump, self.verbosity)
 
-        # Define switches and selects for updating
-        switches = {
-            2327: self.dhw_circulation_switch,
-            2014: self.additional_source_switch,
-        }
-
-        selects = {
-            2025: self.domestic_water_operation,
-        }
 
         logger.info("Kronoterm to MQTT publish loop started...")
 
@@ -298,16 +314,27 @@ class KronotermMqttHandler:
                         sensor.publish(self.mqtt_client)
 
                 # Update and publish switch states
-                for address, switch in switches.items():
+                for address, switch in self.switches.items():
                     if address in self.registers:
                         switch.set_state(switch.ON if self.registers[address] else switch.OFF)
                         switch.publish(self.mqtt_client)
 
                 # Update and publish select states
-                for address, select in selects.items():
-                    if address in self.registers:
-                        select.set_state(REVERSED_DOMESTIC_WATER_OPTIONS[self.registers[address]])
-                        select.publish(self.mqtt_client)
+                for address, (select, _) in self.selects.items():
+                    if address in self.registers and address in self.selects:
+                        _, options = self.selects[address]
+                        register_value = self.registers[address]
+
+                        # Convert register value to display value
+                        display_value = None
+                        for index, key in enumerate(options["keys"]):
+                            if register_value == key:
+                                display_value = options["values"][index]
+                                break
+
+                        if display_value is not None:
+                            select.set_state(display_value)
+                            select.publish(self.mqtt_client)
 
                 # Wait for next iteration
                 if self.verbosity > 0:

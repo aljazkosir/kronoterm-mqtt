@@ -286,3 +286,21 @@ register = 2028
 name = "Circulation Pump for DHW tank"
 device_class = "running"
 bit = 1
+
+[[switch]]
+register = 2328
+name = "Circulation of sanitary water"
+device_class = ""
+
+[[switch]]
+register = 2015
+name = "Additional Source"
+device_class = ""
+
+[[select]]
+register = 2026
+name = "Domestic water operation"
+default_option = "ON"
+[[select.options]]
+keys = [0, 1, 2]
+values = ["OFF", "ON", "SCHEDULED"]
